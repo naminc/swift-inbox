@@ -1,10 +1,12 @@
-import { Mail, Moon, Sun } from "lucide-react";
+import { Mail, Moon, Shield, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { useAdminAuth } from "@/hooks/use-admin-auth-hook";
 import { useTheme } from "@/hooks/use-theme";
 
 export function Header() {
   const { theme, toggle } = useTheme();
+  const { isAuthenticated } = useAdminAuth();
 
   return (
     <header className="border-b border-border bg-background">
@@ -34,10 +36,10 @@ export function Header() {
             FAQ
           </Link>
           <Link
-            to="/terms"
+            to="/contact"
             className="rounded px-2.5 py-1.5 text-muted-foreground hover:text-foreground"
           >
-            Terms
+            Contact
           </Link>
           <Link
             to="/donate"
@@ -45,6 +47,15 @@ export function Header() {
           >
             Donate
           </Link>
+          {isAuthenticated && (
+            <Link
+              to="/admin/domains"
+              className="inline-flex items-center gap-1 rounded px-2.5 py-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <Shield className="h-3.5 w-3.5" />
+              Admin
+            </Link>
+          )}
           <button
             type="button"
             onClick={toggle}

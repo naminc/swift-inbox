@@ -22,10 +22,13 @@ export const errorHandler = (
     errors = err.errors;
   }
 
-  logger.error(
-    err,
-    `Error: ${message} | Status: ${statusCode} | Path: ${req.method} ${req.originalUrl}`
-  );
+  const logLine = `${message} | ${statusCode} | ${req.method} ${req.originalUrl}`;
+
+  if (err instanceof ApiError && err.isOperational) {
+    logger.warn(logLine);
+  } else {
+    logger.error(err, logLine);
+  }
 
   const response = {
     success: false,

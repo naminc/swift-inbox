@@ -1,15 +1,67 @@
 import { FormEvent, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { StatusMessage } from "@/components/feedback/StatusMessage";
 import { PageLayout } from "@/components/tempmail/PageLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { createAbuseReport } from "@/lib/api";
+import { errorMessage } from "@/lib/errors";
+import { queryKeys } from "@/lib/query-keys";
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function ContactPage() {
-  const [submitted, setSubmitted] = useState(false);
+  const queryClient = useQueryClient();
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const createAbuseReportMutation = useMutation({
+    mutationFn: createAbuseReport,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.abuseReportsRoot,
+      });
+    },
+  });
+
   usePageTitle("Contact - TempMail");
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSubmitted(true);
+
+    const nextEmail = email.trim();
+    const nextMessage = message.trim();
+
+    if (nextEmail && !emailPattern.test(nextEmail)) {
+      setError("Enter a valid email address or leave it blank.");
+      setSuccess(null);
+      return;
+    }
+
+    if (nextMessage.length < 10) {
+      setError("Message must be at least 10 characters.");
+      setSuccess(null);
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await createAbuseReportMutation.mutateAsync({
+        ...(nextEmail && { email: nextEmail }),
+        message: nextMessage,
+      });
+
+      setMessage("");
+      setSuccess("Thanks. Your report has been submitted.");
+    } catch (nextError) {
+      setError(errorMessage(nextError, "Could not submit your report."));
+    }
   };
 
   return (
@@ -30,57 +82,53 @@ export function ContactPage() {
           onSubmit={handleSubmit}
           className="mt-8 space-y-4 rounded-md border border-border bg-card p-4"
         >
+          {error && (
+            <StatusMessage tone="error" className="px-3 py-2">
+              {error}
+            </StatusMessage>
+          )}
+
+          {success && (
+            <StatusMessage tone="success" className="px-3 py-2">
+              {success}
+            </StatusMessage>
+          )}
+
           <div>
             <label htmlFor="email" className="text-sm font-medium text-foreground">
               Email optional
             </label>
-            <input
+            <Input
               id="email"
               type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
               placeholder="you@example.com"
-              className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30"
+              className="mt-2"
             />
-          </div>
-
-          <div>
-            <label htmlFor="topic" className="text-sm font-medium text-foreground">
-              Topic
-            </label>
-            <select
-              id="topic"
-              className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary/60"
-            >
-              <option>General support</option>
-              <option>Abuse report</option>
-              <option>Domain issue</option>
-              <option>Feature request</option>
-            </select>
           </div>
 
           <div>
             <label htmlFor="message" className="text-sm font-medium text-foreground">
               Message
             </label>
-            <textarea
+            <Textarea
               id="message"
-              rows={6}
+              rows={7}
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
               placeholder="Describe what happened..."
-              className="mt-2 w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30"
+              className="mt-2 resize-none"
             />
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="submit"
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              Submit
-            </button>
-            {submitted && (
-              <p className="text-sm text-muted-foreground">
-                Message captured locally. Connect a backend before sending real reports.
-              </p>
-            )}
+            <Button type="submit" disabled={createAbuseReportMutation.isPending}>
+              {createAbuseReportMutation.isPending ? "Submitting..." : "Submit"}
+            </Button>
+            <p className="text-sm text-muted-foreground">
+              Reports are reviewed by the Swift Inbox operations team.
+            </p>
           </div>
         </form>
       </div>

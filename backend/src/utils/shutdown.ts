@@ -1,4 +1,5 @@
 import { Server } from "http";
+import prisma from "../configs/prisma";
 import { logger } from "./logger";
 
 export const configureGracefulShutdown = (server: Server) => {
@@ -8,17 +9,22 @@ export const configureGracefulShutdown = (server: Server) => {
     process.on(signal, () => {
       logger.info(`\n${signal} signal received. Shutting down gracefully...`);
 
-      server.close(err => {
+      server.close(async err => {
         if (err) {
           logger.error(err, "Error during server close");
-          process.exit(1);
+        }
+
+        try {
+          await prisma.$disconnect();
+          logger.info("Database connection closed.");
+        } catch (disconnectError) {
+          logger.error(disconnectError, "Error disconnecting from database");
         }
 
         logger.info("HTTP server closed.");
-        process.exit(0);
+        process.exit(err ? 1 : 0);
       });
 
-      // Force shutdown after 10 seconds
       setTimeout(() => {
         logger.error(
           "Could not close connections in time, forcefully shutting down"

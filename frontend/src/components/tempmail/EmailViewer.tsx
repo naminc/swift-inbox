@@ -1,12 +1,14 @@
-import { Mail } from "lucide-react";
-import type { MockEmail } from "@/lib/mock-data";
+import { Loader2, Mail, Trash2 } from "lucide-react";
+import type { EmailListItem } from "@/types/message";
 
 interface Props {
-  email: MockEmail | null;
+  email: EmailListItem | null;
   to: string;
+  isDeleting?: boolean;
+  onDelete?: (id: string) => void;
 }
 
-export function EmailViewer({ email, to }: Props) {
+export function EmailViewer({ email, to, isDeleting = false, onDelete }: Props) {
   if (!email) {
     return (
       <div className="flex h-full min-h-[400px] flex-col items-center justify-center rounded-md border border-border bg-card p-8 text-center">
@@ -19,7 +21,25 @@ export function EmailViewer({ email, to }: Props) {
   return (
     <div className="flex h-full min-h-[400px] flex-col rounded-md border border-border bg-card">
       <div className="border-b border-border p-4">
-        <h2 className="text-base font-semibold">{email.subject}</h2>
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <h2 className="min-w-0 break-words text-base font-semibold">{email.subject}</h2>
+          {onDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(email.id)}
+              disabled={isDeleting}
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-destructive/40 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-60"
+              aria-label="Delete message"
+              title="Delete message"
+            >
+              {isDeleting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+            </button>
+          )}
+        </div>
         <dl className="mt-3 grid gap-1 text-xs">
           <div className="flex gap-2">
             <dt className="w-14 shrink-0 text-muted-foreground">From</dt>
@@ -38,7 +58,7 @@ export function EmailViewer({ email, to }: Props) {
           </div>
         </dl>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 text-sm leading-relaxed whitespace-pre-line">
+      <div className="flex-1 overflow-y-auto p-4 text-sm leading-relaxed break-words whitespace-pre-wrap">
         {email.body}
       </div>
     </div>

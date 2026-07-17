@@ -40,6 +40,10 @@ export class ApiError extends Error {
     return new ApiError(STATUS_CODES.CONFLICT, message);
   }
 
+  static gone(message = "Gone") {
+    return new ApiError(STATUS_CODES.GONE, message);
+  }
+
   static validation(message = "Validation failed", errors?: unknown) {
     return new ApiError(STATUS_CODES.BAD_REQUEST, message, errors);
   }
