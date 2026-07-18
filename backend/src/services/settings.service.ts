@@ -4,11 +4,18 @@ import { ApiError } from "../utils/api-error";
 
 export type AppSettings = {
   siteName: string;
+  siteTitle: string;
+  heroHeading: string;
+  heroSubheading: string;
+  metaKeywords: string;
+  metaDescription: string;
+  metaAuthor: string;
   supportEmail: string;
   defaultMailboxExpiryMinutes: number;
   maxMailboxMessages: number;
   randomLocalPartMinLength: number;
   randomLocalPartMaxLength: number;
+  expiredMailboxRetentionDays: number;
   allowPublicMailboxCreation: boolean;
   maintenanceMode: boolean;
   maintenanceMessage: string;
@@ -16,11 +23,20 @@ export type AppSettings = {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   siteName: "Swift Inbox",
+  siteTitle: "Swift Inbox - Free Temporary Email",
+  heroHeading: "Free Temporary Email",
+  heroSubheading: "Free, fast, private temporary email address.",
+  metaKeywords:
+    "temporary email,temp mail,disposable email,free email,privacy inbox",
+  metaDescription:
+    "Swift Inbox provides fast, private temporary email addresses for signups, verification codes, and short-lived inboxes.",
+  metaAuthor: "NAMINC",
   supportEmail: "support@example.com",
   defaultMailboxExpiryMinutes: 60,
   maxMailboxMessages: 100,
   randomLocalPartMinLength: 6,
   randomLocalPartMaxLength: 10,
+  expiredMailboxRetentionDays: 7,
   allowPublicMailboxCreation: true,
   maintenanceMode: false,
   maintenanceMessage:
@@ -94,6 +110,12 @@ export async function getPublicSettings() {
 
   return {
     siteName: settings.siteName,
+    siteTitle: settings.siteTitle,
+    heroHeading: settings.heroHeading,
+    heroSubheading: settings.heroSubheading,
+    metaKeywords: settings.metaKeywords,
+    metaDescription: settings.metaDescription,
+    metaAuthor: settings.metaAuthor,
     supportEmail: settings.supportEmail,
     randomLocalPartMinLength: settings.randomLocalPartMinLength,
     randomLocalPartMaxLength: settings.randomLocalPartMaxLength,

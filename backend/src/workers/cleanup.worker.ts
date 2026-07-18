@@ -14,7 +14,10 @@ export function startCleanupWorker(): NodeJS.Timeout | null {
       const result = await cleanupExpiredMailboxes();
 
       if (result.deletedMailboxes > 0) {
-        logger.info(result, "[cleanup]: Expired mailboxes removed");
+        logger.info(
+          result,
+          "[cleanup]: Expired mailboxes purged after retention"
+        );
       }
     } catch (error) {
       logger.error(error, "[cleanup]: Cleanup worker failed");

@@ -46,8 +46,8 @@ export const postAbuseReport = AsyncHandler(
 );
 
 export const getAbuseReports = AsyncHandler(
-  async (req: Request, res: Response) => {
-    const reports = await listAbuseReports(req.query as never);
+  async (_req: Request, res: Response) => {
+    const reports = await listAbuseReports(res.locals.query);
 
     return ApiResponse.ok(res, "Abuse reports fetched", reports);
   }

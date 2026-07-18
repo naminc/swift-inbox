@@ -10,10 +10,18 @@ import { Toolbar } from "@/components/tempmail/Toolbar";
 import { useCurrentMailbox } from "@/hooks/use-current-mailbox";
 import { useInboxMessages } from "@/hooks/use-inbox-messages";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { usePublicSettings } from "@/hooks/use-public-settings";
 import { errorMessage } from "@/lib/errors";
+import { SITE_DEFAULTS } from "@/lib/site-defaults";
 
 export function Home() {
-  usePageTitle("TempMail - Free Temporary Email");
+  const { data: publicSettings } = usePublicSettings();
+
+  const siteTitle = publicSettings?.siteTitle || SITE_DEFAULTS.siteTitle;
+  const heroHeading = publicSettings?.heroHeading || SITE_DEFAULTS.heroHeading;
+  const heroSubheading = publicSettings?.heroSubheading || SITE_DEFAULTS.heroSubheading;
+
+  usePageTitle(siteTitle);
 
   const mb = useCurrentMailbox();
 
@@ -50,6 +58,8 @@ export function Home() {
         username={mb.username}
         domain={mb.domain}
         domains={mb.domainOptions}
+        title={heroHeading}
+        subtitle={heroSubheading}
         isLoading={mb.isDomainsLoading}
         isGenerating={mb.isCreatePending}
         disabled={mb.isCreatePending || mb.isMaintenanceMode}

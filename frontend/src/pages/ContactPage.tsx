@@ -10,8 +10,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { createAbuseReport } from "@/lib/api";
 import { errorMessage } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
-
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { validateContactForm } from "@/lib/validation";
 
 export function ContactPage() {
   const queryClient = useQueryClient();
@@ -35,15 +34,13 @@ export function ContactPage() {
 
     const nextEmail = email.trim();
     const nextMessage = message.trim();
+    const validationError = validateContactForm({
+      email: nextEmail,
+      message: nextMessage,
+    });
 
-    if (nextEmail && !emailPattern.test(nextEmail)) {
-      setError("Enter a valid email address or leave it blank.");
-      setSuccess(null);
-      return;
-    }
-
-    if (nextMessage.length < 10) {
-      setError("Message must be at least 10 characters.");
+    if (validationError) {
+      setError(validationError);
       setSuccess(null);
       return;
     }

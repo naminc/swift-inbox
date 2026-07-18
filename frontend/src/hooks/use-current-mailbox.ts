@@ -113,7 +113,7 @@ export function useCurrentMailbox() {
   const expiryLabel = timeRemaining
     ? timeRemaining.isExpired
       ? "Expired"
-      : `Expires in ${timeRemaining.label.replace(/ left$/, "")}`
+      : `Expires in ${timeRemaining.label}`
     : null;
   const expiryTone = timeRemaining?.isExpired
     ? ("expired" as const)
@@ -221,7 +221,7 @@ export function useCurrentMailbox() {
   }, [publicSettingsQuery.error, publicSettingsQuery.isError]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNowMs(Date.now()), 30_000);
+    const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, []);
 

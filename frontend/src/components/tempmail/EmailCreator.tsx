@@ -10,6 +10,8 @@ interface Props {
   username: string;
   domain: string;
   domains: EmailDomainOption[];
+  title: string;
+  subtitle: string;
   isLoading?: boolean;
   isGenerating?: boolean;
   disabled?: boolean;
@@ -22,6 +24,8 @@ export function EmailCreator({
   username,
   domain,
   domains,
+  title,
+  subtitle,
   isLoading = false,
   isGenerating = false,
   disabled = false,
@@ -34,10 +38,8 @@ export function EmailCreator({
 
   return (
     <section className="mx-auto w-full max-w-2xl px-4 py-10 text-center">
-      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Free Temporary Email</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Free, fast, private temporary email address.
-      </p>
+      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
 
       <div className="mt-6 flex w-full min-w-0 flex-col gap-2 sm:flex-row">
         <input

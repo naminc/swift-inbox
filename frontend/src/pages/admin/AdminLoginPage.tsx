@@ -1,44 +1,31 @@
-import { FormEvent, useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Shield } from "lucide-react";
 
 import { StatusMessage } from "@/components/feedback/StatusMessage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAdminAuth } from "@/hooks/use-admin-auth-hook";
+import { useAdminLogin } from "@/hooks/use-admin-login";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { errorMessage } from "@/lib/errors";
-
-type LocationState = {
-  from?: string;
-};
 
 export function AdminLoginPage() {
   usePageTitle("Admin Login - Swift Inbox");
 
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { isAuthenticated, isLoading, isLoggingIn, login } = useAdminAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    error,
+    isAuthenticated,
+    isLoading,
+    isLoggingIn,
+    handleSubmit,
+    redirectTo,
+  } = useAdminLogin();
 
   if (!isLoading && isAuthenticated) {
-    return <Navigate to="/admin/domains" replace />;
+    return <Navigate to={redirectTo} replace />;
   }
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError(null);
-
-    try {
-      await login(email.trim(), password);
-      const state = location.state as LocationState | null;
-      navigate(state?.from ?? "/admin/domains", { replace: true });
-    } catch (nextError) {
-      setError(errorMessage(nextError, "Could not log in"));
-    }
-  };
 
   return (
     <div className="grid min-h-screen place-items-center bg-background px-4 py-10">

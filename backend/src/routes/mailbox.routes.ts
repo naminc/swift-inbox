@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  getAdminMailboxMessages,
   getMailbox,
   getMailboxMessages,
   getMailboxes,
@@ -24,6 +25,7 @@ router.get(
   getMailboxes
 );
 router.post("/", createMailboxLimiter, postMailbox);
+router.get("/:address/admin/messages", requireAdmin, getAdminMailboxMessages);
 router.get("/:address/messages", getMailboxMessages);
 router.patch("/:address/renew", mutationLimiter, patchMailboxRenew);
 router.get("/:address", getMailbox);

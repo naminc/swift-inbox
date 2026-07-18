@@ -61,7 +61,7 @@ export function Toolbar({
           <span className="min-w-0 truncate font-mono text-sm">{email}</span>
           {expiryLabel && (
             <span
-              className={`inline-flex max-w-full shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] ${expiryClass}`}
+              className={`inline-flex min-w-[92px] max-w-full shrink-0 items-center justify-center gap-1 rounded-full border px-2 py-0.5 text-[11px] sm:min-w-[104px] ${expiryClass}`}
             >
               <Clock className="h-3 w-3 shrink-0" />
               <span className="truncate">{expiryLabel}</span>

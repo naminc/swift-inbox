@@ -1,8 +1,11 @@
--- Drop redundant index on Mailbox.address (already covered by UNIQUE constraint)
-DROP INDEX `Mailbox_address_idx` ON `Mailbox`;
+-- Create the composite index FIRST so the foreign key on Message.mailboxId
+-- can rely on it (its leftmost column is mailboxId). MySQL refuses to drop
+-- the single-column index while it is still needed by the FK constraint.
+CREATE INDEX `Message_mailboxId_receivedAt_idx` ON `Message`(`mailboxId`, `receivedAt`);
 
--- Replace separate single-column indexes on Message with a composite index
--- that covers the hot query: WHERE mailboxId = ? ORDER BY receivedAt DESC
+-- Now it is safe to drop the redundant single-column indexes on Message.
 DROP INDEX `Message_mailboxId_idx` ON `Message`;
 DROP INDEX `Message_receivedAt_idx` ON `Message`;
-CREATE INDEX `Message_mailboxId_receivedAt_idx` ON `Message`(`mailboxId`, `receivedAt`);
+
+-- Drop redundant index on Mailbox.address (already covered by UNIQUE constraint).
+DROP INDEX `Mailbox_address_idx` ON `Mailbox`;

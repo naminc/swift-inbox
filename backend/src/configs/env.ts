@@ -1,6 +1,8 @@
 import dotenv from "dotenv-flow";
-dotenv.config();
 import { z } from "zod";
+import { PROJECT_ROOT } from "./paths";
+
+dotenv.config({ path: PROJECT_ROOT });
 
 export const envSchema = z.object({
   NODE_ENV: z

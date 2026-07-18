@@ -8,6 +8,7 @@ export const queryKeys = {
   domains: ["domains"] as const,
   mailbox: (address: string) => ["mailbox", address] as const,
   mailboxMessages: (address: string) => ["mailbox", address, "messages"] as const,
+  adminMailboxMessages: (address: string) => ["admin", "mailbox", address, "messages"] as const,
   adminMailboxesRoot: ["admin", "mailboxes"] as const,
   adminMailboxes: (params: ListMailboxesParams) => ["admin", "mailboxes", params] as const,
   abuseReportsRoot: ["admin", "abuse", "reports"] as const,

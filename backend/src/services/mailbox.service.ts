@@ -319,3 +319,27 @@ export async function listMailboxMessages(address: string) {
     }
   });
 }
+
+// Admin-only: intentionally does NOT call assertMailboxReadable so admins can
+// review messages of expired mailboxes during the retention window.
+export async function listMailboxMessagesForAdmin(address: string) {
+  const mailbox = await getMailboxByAddress(address);
+
+  return prisma.message.findMany({
+    where: {
+      mailboxId: mailbox.id
+    },
+    select: {
+      id: true,
+      fromAddress: true,
+      subject: true,
+      textBody: true,
+      htmlBody: true,
+      isRead: true,
+      receivedAt: true
+    },
+    orderBy: {
+      receivedAt: "desc"
+    }
+  });
+}

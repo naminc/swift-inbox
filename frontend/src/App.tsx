@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { AppReadyMarker } from "@/components/feedback/AppReadyMarker";
 import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
+import { PublicSettingsMeta } from "@/components/feedback/PublicSettingsMeta";
 import { RouteProgress } from "@/components/feedback/RouteProgress";
 import { AdminAuthProvider } from "@/hooks/use-admin-auth";
 import { queryClient } from "@/lib/query-client";
@@ -13,6 +14,7 @@ export default function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AdminAuthProvider>
+          <PublicSettingsMeta />
           <RouteProgress />
           <Suspense fallback={null}>
             <AppReadyMarker />

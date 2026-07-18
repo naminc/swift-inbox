@@ -163,6 +163,10 @@ export function getMailboxMessages(address: string) {
   return request<InboxMessage[]>(`/api/mailboxes/${encodedAddress(address)}/messages`);
 }
 
+export function getAdminMailboxMessages(address: string) {
+  return request<InboxMessage[]>(`/api/mailboxes/${encodedAddress(address)}/admin/messages`);
+}
+
 export function getMessage(id: number, mailboxAddress: string) {
   return request<MessageDetail>(`/api/messages/${id}${queryString({ mailboxAddress })}`);
 }

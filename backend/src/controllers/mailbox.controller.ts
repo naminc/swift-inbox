@@ -6,6 +6,7 @@ import {
   getMailboxByAddress,
   listMailboxes,
   listMailboxMessages,
+  listMailboxMessagesForAdmin,
   renewMailbox
 } from "../services/mailbox.service";
 import { ApiError } from "../utils/api-error";
@@ -49,8 +50,8 @@ export const postMailbox = AsyncHandler(async (req: Request, res: Response) => {
 });
 
 export const getMailboxes = AsyncHandler(
-  async (req: Request, res: Response) => {
-    const mailboxes = await listMailboxes(req.query as never);
+  async (_req: Request, res: Response) => {
+    const mailboxes = await listMailboxes(res.locals.query);
 
     return ApiResponse.ok(res, "Mailboxes fetched", mailboxes);
   }
@@ -90,6 +91,14 @@ export const removeMailbox = AsyncHandler(
 export const getMailboxMessages = AsyncHandler(
   async (req: Request, res: Response) => {
     const messages = await listMailboxMessages(getAddressParam(req));
+
+    return ApiResponse.ok(res, "Mailbox messages fetched", messages);
+  }
+);
+
+export const getAdminMailboxMessages = AsyncHandler(
+  async (req: Request, res: Response) => {
+    const messages = await listMailboxMessagesForAdmin(getAddressParam(req));
 
     return ApiResponse.ok(res, "Mailbox messages fetched", messages);
   }

@@ -1,20 +1,12 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import { Eye, RefreshCw, Search, Trash2 } from "lucide-react";
 
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminStatCards } from "@/components/admin/AdminStatCards";
 import { DataTablePagination } from "@/components/admin/DataTablePagination";
+import { MailboxMessagesDialog } from "@/components/admin/mailboxes/MailboxMessagesDialog";
 import { StatusMessage } from "@/components/feedback/StatusMessage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -24,104 +16,34 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { isMailboxExpired, useAdminMailboxes } from "@/hooks/use-admin-mailboxes";
 import { useAdminTableState } from "@/hooks/use-admin-table-state";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { deleteMailbox, getDomains, getMailboxMessages, listMailboxes } from "@/lib/api";
-import { formatDate, formatDateTime } from "@/lib/date";
-import { readableMessageBody } from "@/lib/email-content";
-import { errorMessage } from "@/lib/errors";
-import { queryKeys } from "@/lib/query-keys";
-import type { MailboxListItem, MailboxListResponse } from "@/types/mailbox";
+import { formatDate } from "@/lib/date";
 
 const PAGE_LIMIT = 10;
-
-const EMPTY_MAILBOXES: MailboxListResponse = {
-  items: [],
-  meta: {
-    page: 1,
-    limit: PAGE_LIMIT,
-    total: 0,
-    totalPages: 1,
-  },
-};
 
 export function AdminMailboxesPage() {
   usePageTitle("Admin Mailboxes - Swift Inbox");
 
-  const queryClient = useQueryClient();
   const table = useAdminTableState({ limit: PAGE_LIMIT, withDomainFilter: true });
-  const [error, setError] = useState<string | null>(null);
-  const [selectedMailbox, setSelectedMailbox] = useState<MailboxListItem | null>(null);
-
-  const domainsQuery = useQuery({
-    queryKey: queryKeys.domains,
-    queryFn: getDomains,
-  });
-
-  const domains = domainsQuery.data ?? [];
-
-  const mailboxesQuery = useQuery({
-    queryKey: queryKeys.adminMailboxes(table.params),
-    queryFn: () => listMailboxes(table.params),
-    placeholderData: keepPreviousData,
-  });
-
-  const selectedAddress = selectedMailbox?.address ?? "";
-  const messagesQuery = useQuery({
-    queryKey: queryKeys.mailboxMessages(selectedAddress),
-    queryFn: () => getMailboxMessages(selectedAddress),
-    enabled: Boolean(selectedAddress),
-  });
-
-  const deleteMailboxMutation = useMutation({
-    mutationFn: deleteMailbox,
-    onSuccess: (_data, address) => {
-      queryClient.removeQueries({ queryKey: queryKeys.mailbox(address) });
-      queryClient.removeQueries({ queryKey: queryKeys.mailboxMessages(address) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.adminMailboxesRoot });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.cleanupStats });
-    },
-  });
-
-  const mailboxes = mailboxesQuery.data ?? EMPTY_MAILBOXES;
-  const messages = messagesQuery.data ?? [];
-  const isLoading = mailboxesQuery.isPending;
-  const pageError =
-    error ??
-    (mailboxesQuery.isError
-      ? errorMessage(mailboxesQuery.error, "Could not load mailboxes")
-      : null);
-  const messagesError = messagesQuery.isError
-    ? errorMessage(messagesQuery.error, "Could not load messages")
-    : null;
-  const totalPages = mailboxes.meta.totalPages || 1;
-
-  const openMessages = (mailbox: MailboxListItem) => {
-    setSelectedMailbox(mailbox);
-    void queryClient.invalidateQueries({
-      queryKey: queryKeys.mailboxMessages(mailbox.address),
-    });
-  };
-
-  const handleDelete = async (mailbox: MailboxListItem) => {
-    const confirmed = window.confirm(
-      `Delete ${mailbox.address}? Messages in this inbox will be removed.`,
-    );
-
-    if (!confirmed) return;
-
-    setError(null);
-
-    try {
-      await deleteMailboxMutation.mutateAsync(mailbox.address);
-
-      if (selectedMailbox?.address === mailbox.address) {
-        setSelectedMailbox(null);
-      }
-    } catch (nextError) {
-      setError(errorMessage(nextError, "Could not delete mailbox"));
-    }
-  };
+  const {
+    domains,
+    mailboxes,
+    isLoading,
+    isFetching,
+    refetch,
+    pageError,
+    totalPages,
+    selectedMailbox,
+    setSelectedMailbox,
+    messages,
+    messagesError,
+    isMessagesLoading,
+    openMessages,
+    handleDelete,
+    isDeleting,
+  } = useAdminMailboxes(table);
 
   return (
     <div className="min-w-0 space-y-3">
@@ -129,12 +51,7 @@ export function AdminMailboxesPage() {
         title="Mailboxes"
         description="Review generated inboxes, inspect recent messages, and remove stale addresses."
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void mailboxesQuery.refetch()}
-            disabled={mailboxesQuery.isFetching}
-          >
+          <Button variant="outline" size="sm" onClick={() => void refetch()} disabled={isFetching}>
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
@@ -195,6 +112,7 @@ export function AdminMailboxesPage() {
                 <TableHead className="h-8">Address</TableHead>
                 <TableHead className="h-8">Domain</TableHead>
                 <TableHead className="h-8">Messages</TableHead>
+                <TableHead className="h-8">Status</TableHead>
                 <TableHead className="h-8">Expires</TableHead>
                 <TableHead className="h-8">Created</TableHead>
                 <TableHead className="h-8 w-[96px] text-right">Actions</TableHead>
@@ -213,6 +131,13 @@ export function AdminMailboxesPage() {
                   </TableCell>
                   <TableCell className="py-1.5">
                     <Badge variant="outline">{mailbox._count.messages}</Badge>
+                  </TableCell>
+                  <TableCell className="py-1.5">
+                    {isMailboxExpired(mailbox.expiresAt) ? (
+                      <Badge variant="destructive">Expired</Badge>
+                    ) : (
+                      <Badge variant="secondary">Active</Badge>
+                    )}
                   </TableCell>
                   <TableCell className="py-1.5 text-muted-foreground">
                     {formatDate(mailbox.expiresAt)}
@@ -237,7 +162,7 @@ export function AdminMailboxesPage() {
                         className="h-7 w-7"
                         aria-label={`Delete ${mailbox.address}`}
                         onClick={() => void handleDelete(mailbox)}
-                        disabled={deleteMailboxMutation.isPending}
+                        disabled={isDeleting}
                       >
                         <Trash2 className="h-3.5 w-3.5 text-destructive" />
                       </Button>
@@ -258,61 +183,13 @@ export function AdminMailboxesPage() {
         onNext={() => table.handleNext(totalPages)}
       />
 
-      <Dialog
-        open={Boolean(selectedMailbox)}
-        onOpenChange={(open) => !open && setSelectedMailbox(null)}
-      >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Mailbox messages</DialogTitle>
-            <DialogDescription className="break-all">
-              {selectedMailbox?.address ?? "Selected mailbox"}
-            </DialogDescription>
-          </DialogHeader>
-
-          {messagesError && (
-            <StatusMessage tone="error" className="px-3 py-2">
-              {messagesError}
-            </StatusMessage>
-          )}
-
-          <div className="max-h-[460px] overflow-y-auto rounded-md border border-border">
-            {selectedMailbox && messagesQuery.isPending ? (
-              <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-                Loading messages...
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-                This mailbox has no messages.
-              </div>
-            ) : (
-              messages.map((message) => (
-                <div key={message.id} className="border-b border-border p-3 last:border-b-0">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-medium">
-                        {message.subject ?? "(No subject)"}
-                      </div>
-                      <div className="mt-1 truncate font-mono text-xs text-muted-foreground">
-                        {message.fromAddress}
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <Badge variant="outline">{message.isRead ? "Read" : "Unread"}</Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDateTime(message.receivedAt)}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="mt-2 line-clamp-2 text-sm leading-6 break-words text-muted-foreground">
-                    {readableMessageBody(message) || "(No readable body)"}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <MailboxMessagesDialog
+        mailbox={selectedMailbox}
+        messages={messages}
+        error={messagesError}
+        isLoading={isMessagesLoading}
+        onClose={() => setSelectedMailbox(null)}
+      />
     </div>
   );
 }

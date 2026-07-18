@@ -56,22 +56,32 @@ export function getTimeRemaining(target: string | null, now = Date.now()) {
     };
   }
 
-  const minutes = Math.ceil(ms / 60000);
+  const totalSeconds = Math.ceil(ms / 1000);
 
-  if (minutes < 60) {
+  if (totalSeconds < 60) {
     return {
       isExpired: false,
-      label: `${minutes}m left`,
+      label: `${totalSeconds}s`,
       ms,
     };
   }
 
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (totalMinutes < 60) {
+    return {
+      isExpired: false,
+      label: `${totalMinutes}m ${String(seconds).padStart(2, "0")}s`,
+      ms,
+    };
+  }
+
+  const hours = Math.ceil(ms / (60 * 60 * 1000));
 
   return {
     isExpired: false,
-    label: remainingMinutes ? `${hours}h ${remainingMinutes}m left` : `${hours}h left`,
+    label: `${hours}h`,
     ms,
   };
 }
