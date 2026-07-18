@@ -77,7 +77,7 @@ export function getTimeRemaining(target: string | null, now = Date.now()) {
     };
   }
 
-  const hours = Math.ceil(ms / (60 * 60 * 1000));
+  const hours = Math.floor(totalMinutes / 60);
 
   return {
     isExpired: false,
