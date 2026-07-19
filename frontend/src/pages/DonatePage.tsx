@@ -1,5 +1,7 @@
 import { PageLayout } from "@/components/tempmail/PageLayout";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { usePublicSettings } from "@/hooks/use-public-settings";
+import { SITE_DEFAULTS } from "@/lib/site-defaults";
 
 const options = [
   {
@@ -17,7 +19,10 @@ const options = [
 ];
 
 export function DonatePage() {
-  usePageTitle("Donate - TempMail");
+  const { data: publicSettings } = usePublicSettings();
+  const siteName = publicSettings?.siteName || SITE_DEFAULTS.siteName;
+
+  usePageTitle(`Donate - ${siteName}`);
 
   return (
     <PageLayout>
@@ -25,7 +30,7 @@ export function DonatePage() {
         <div className="border-b border-border pb-6">
           <p className="text-sm font-medium text-primary">Donate</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
-            Support TempMail
+            Support {siteName}
           </h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
             Support helps keep domains running, improve reliability, and reduce the need for noisy

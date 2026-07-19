@@ -7,13 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { usePublicSettings } from "@/hooks/use-public-settings";
 import { createAbuseReport } from "@/lib/api";
 import { errorMessage } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
+import { SITE_DEFAULTS } from "@/lib/site-defaults";
 import { validateContactForm } from "@/lib/validation";
 
 export function ContactPage() {
   const queryClient = useQueryClient();
+  const { data: publicSettings } = usePublicSettings();
+  const siteName = publicSettings?.siteName || SITE_DEFAULTS.siteName;
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +31,7 @@ export function ContactPage() {
     },
   });
 
-  usePageTitle("Contact - TempMail");
+  usePageTitle(`Contact - ${siteName}`);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -124,7 +128,7 @@ export function ContactPage() {
               {createAbuseReportMutation.isPending ? "Submitting..." : "Submit"}
             </Button>
             <p className="text-sm text-muted-foreground">
-              Reports are reviewed by the Swift Inbox operations team.
+              Reports are reviewed by the {siteName} operations team.
             </p>
           </div>
         </form>
