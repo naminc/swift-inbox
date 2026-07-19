@@ -3,6 +3,7 @@ import type { AppSettings } from "@/types/settings";
 
 export const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const domainPattern = /^(?!-)(?:[a-z0-9-]{1,63}\.)+[a-z]{2,63}$/;
+export const localPartPattern = /^[a-z0-9._-]+$/;
 
 const CONTACT_MESSAGE_MIN_LENGTH = 10;
 
@@ -101,6 +102,14 @@ export function validateSettingsForm(form: AppSettings): string | null {
 
   if (form.maintenanceMessage.length > 240) {
     return "Maintenance message must be 240 characters or fewer";
+  }
+
+  if (form.reservedLocalParts.length > 64) {
+    return "Reserved usernames cannot exceed 64 entries";
+  }
+
+  if (form.reservedLocalParts.some((item) => !localPartPattern.test(item))) {
+    return "Reserved usernames can only contain letters, numbers, dots, underscores, and hyphens";
   }
 
   return null;

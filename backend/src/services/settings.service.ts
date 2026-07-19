@@ -19,6 +19,7 @@ export type AppSettings = {
   allowPublicMailboxCreation: boolean;
   maintenanceMode: boolean;
   maintenanceMessage: string;
+  reservedLocalParts: string[];
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -40,7 +41,25 @@ export const DEFAULT_SETTINGS: AppSettings = {
   allowPublicMailboxCreation: true,
   maintenanceMode: false,
   maintenanceMessage:
-    "Swift Inbox is under maintenance. Existing inboxes can be viewed, but new addresses and mailbox changes are paused."
+    "Swift Inbox is under maintenance. Existing inboxes can be viewed, but new addresses and mailbox changes are paused.",
+  reservedLocalParts: [
+    "admin",
+    "administrator",
+    "root",
+    "postmaster",
+    "hostmaster",
+    "webmaster",
+    "mailer-daemon",
+    "abuse",
+    "security",
+    "support",
+    "info",
+    "contact",
+    "noreply",
+    "no-reply",
+    "catch",
+    "catchall"
+  ]
 };
 
 const settingKeys = Object.keys(DEFAULT_SETTINGS) as Array<keyof AppSettings>;
@@ -61,6 +80,14 @@ function normalizeValue<Key extends keyof AppSettings>(
   value: Prisma.JsonValue
 ): AppSettings[Key] {
   const fallback = DEFAULT_SETTINGS[key];
+
+  if (Array.isArray(fallback)) {
+    return (
+      Array.isArray(value) && value.every(item => typeof item === "string")
+        ? value
+        : fallback
+    ) as AppSettings[Key];
+  }
 
   if (typeof fallback === "string") {
     return (typeof value === "string" ? value : fallback) as AppSettings[Key];

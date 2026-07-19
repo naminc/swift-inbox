@@ -25,7 +25,14 @@ export const DEFAULT_SETTINGS_FORM: AppSettings = {
   maintenanceMode: false,
   maintenanceMessage:
     "Swift Inbox is under maintenance. Existing inboxes can be viewed, but new addresses and mailbox changes are paused.",
+  reservedLocalParts: [],
 };
+
+function normalizeReservedLocalParts(items: string[]): string[] {
+  return Array.from(
+    new Set(items.map((item) => item.trim().toLowerCase()).filter((item) => item.length > 0)),
+  );
+}
 
 export function normalizeSettingsForm(form: AppSettings): AppSettings {
   return {
@@ -44,6 +51,7 @@ export function normalizeSettingsForm(form: AppSettings): AppSettings {
     randomLocalPartMaxLength: Number(form.randomLocalPartMaxLength),
     expiredMailboxRetentionDays: Number(form.expiredMailboxRetentionDays),
     maintenanceMessage: form.maintenanceMessage.trim(),
+    reservedLocalParts: normalizeReservedLocalParts(form.reservedLocalParts),
   };
 }
 

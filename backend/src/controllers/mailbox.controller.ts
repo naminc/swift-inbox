@@ -44,7 +44,9 @@ export const postMailbox = AsyncHandler(async (req: Request, res: Response) => {
     );
   }
 
-  const mailbox = await createMailbox(result.data);
+  const isAdmin = Boolean(res.locals.admin);
+
+  const mailbox = await createMailbox(result.data, { isAdmin });
 
   return ApiResponse.created(res, "Mailbox created", mailbox);
 });

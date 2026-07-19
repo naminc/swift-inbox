@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 import type { SettingsSectionProps } from "./types";
 
@@ -114,6 +115,27 @@ export function MailboxSection({ settings, setSettings }: SettingsSectionProps) 
             cleanup.
           </p>
         </div>
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="reserved-local-parts">Reserved usernames</Label>
+        <Textarea
+          id="reserved-local-parts"
+          rows={4}
+          value={settings.reservedLocalParts.join("\n")}
+          className="text-sm"
+          placeholder="admin&#10;postmaster&#10;support"
+          onChange={(event) =>
+            setSettings((prev) => ({
+              ...prev,
+              reservedLocalParts: event.target.value.split("\n"),
+            }))
+          }
+        />
+        <p className="text-xs text-muted-foreground">
+          One username per line. Public visitors cannot create these inboxes; only signed-in admins
+          can. Matching is exact and case-insensitive.
+        </p>
       </div>
 
       <div className="flex items-center justify-between gap-4 rounded-md border border-border px-3 py-2.5">

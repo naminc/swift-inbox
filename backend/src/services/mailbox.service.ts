@@ -154,19 +154,29 @@ async function createMailboxRecord(
   });
 }
 
-export async function createMailbox(input: CreateMailboxInput) {
+export async function createMailbox(
+  input: CreateMailboxInput,
+  options: { isAdmin?: boolean } = {}
+) {
   const settings = await assertMaintenanceModeDisabled();
 
   if (!settings.allowPublicMailboxCreation) {
     throw ApiError.forbidden("Public mailbox creation is disabled");
   }
 
+  const reservedLocalParts = new Set(settings.reservedLocalParts);
   const domain = await resolveDomain(input.domainId);
   const expiresAt = createExpiresAt(
     input.expiresInMinutes ?? settings.defaultMailboxExpiryMinutes
   );
 
   if (input.localPart) {
+    if (!options.isAdmin && reservedLocalParts.has(input.localPart)) {
+      throw ApiError.forbidden(
+        "You are not allowed to create this email address"
+      );
+    }
+
     try {
       return await createMailboxRecord(input.localPart, domain, expiresAt);
     } catch (error) {
@@ -179,15 +189,17 @@ export async function createMailbox(input: CreateMailboxInput) {
   }
 
   for (let attempt = 0; attempt < 8; attempt += 1) {
+    const candidate = randomLocalPart(
+      settings.randomLocalPartMinLength,
+      settings.randomLocalPartMaxLength
+    );
+
+    if (reservedLocalParts.has(candidate)) {
+      continue;
+    }
+
     try {
-      return await createMailboxRecord(
-        randomLocalPart(
-          settings.randomLocalPartMinLength,
-          settings.randomLocalPartMaxLength
-        ),
-        domain,
-        expiresAt
-      );
+      return await createMailboxRecord(candidate, domain, expiresAt);
     } catch (error) {
       if (!isUniqueConstraintError(error)) {
         throw error;

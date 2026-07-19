@@ -15,6 +15,7 @@ export type AppSettings = {
   allowPublicMailboxCreation: boolean;
   maintenanceMode: boolean;
   maintenanceMessage: string;
+  reservedLocalParts: string[];
 };
 
 export type PublicSettings = Pick<

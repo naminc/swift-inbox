@@ -27,7 +27,28 @@ export const updateSettingsSchema = z
       .optional(),
     allowPublicMailboxCreation: z.boolean().optional(),
     maintenanceMode: z.boolean().optional(),
-    maintenanceMessage: z.string().trim().min(1).max(240).optional()
+    maintenanceMessage: z.string().trim().min(1).max(240).optional(),
+    reservedLocalParts: z
+      .array(z.string())
+      .max(64, "Reserved usernames cannot exceed 64 entries")
+      .optional()
+      .transform(value =>
+        value === undefined
+          ? value
+          : Array.from(
+              new Set(
+                value
+                  .map(item => item.trim().toLowerCase())
+                  .filter(item => item.length > 0)
+              )
+            )
+      )
+      .refine(
+        value =>
+          value === undefined ||
+          value.every(item => /^[a-z0-9._-]+$/.test(item)),
+        "Reserved usernames can only contain letters, numbers, dots, underscores, and hyphens"
+      )
   })
   .superRefine((value, ctx) => {
     if (Object.keys(value).length === 0) {
