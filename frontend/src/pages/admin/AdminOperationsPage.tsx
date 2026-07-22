@@ -1,4 +1,4 @@
-import { AlertTriangle, Power, RefreshCw, RotateCcw } from "lucide-react";
+import { AlertTriangle, Power, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 
 import { StatusMessage } from "@/components/feedback/StatusMessage";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ export function AdminOperationsPage() {
     isLoading,
     isSettingsLoading,
     isRunning,
+    isDeletingAllMailboxes,
     isMaintenanceMode,
     isTogglingMaintenance,
     maintenanceMessage,
@@ -20,6 +21,7 @@ export function AdminOperationsPage() {
     success,
     handleRefresh,
     handleRunCleanup,
+    handleDeleteAllMailboxes,
     handleToggleMaintenance,
   } = useAdminOperations();
 
@@ -131,6 +133,27 @@ export function AdminOperationsPage() {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="text-sm font-medium text-destructive">Danger zone</div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Permanently delete every mailbox and all stored messages. Domains and settings are
+              kept.
+            </p>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => void handleDeleteAllMailboxes()}
+            disabled={isLoading || isRunning || isDeletingAllMailboxes || !stats?.totalMailboxes}
+          >
+            <Trash2 className="h-4 w-4" />
+            {isDeletingAllMailboxes ? "Deleting..." : "Delete all mailboxes"}
+          </Button>
+        </div>
       </div>
     </div>
   );

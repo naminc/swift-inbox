@@ -1,10 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { getCleanupStats, getSettings, runCleanup, updateSettings } from "@/lib/api";
+import {
+  deleteAllMailboxes,
+  getCleanupStats,
+  getSettings,
+  runCleanup,
+  updateSettings,
+} from "@/lib/api";
 import { formatDateTime } from "@/lib/date";
 import { errorMessage } from "@/lib/errors";
+import { clearStoredMailbox } from "@/lib/mailbox-storage";
 import { queryKeys } from "@/lib/query-keys";
+
+const DELETE_ALL_CONFIRMATION = "DELETE ALL MAILBOXES";
 
 export function useAdminOperations() {
   const queryClient = useQueryClient();
@@ -29,6 +38,20 @@ export function useAdminOperations() {
       );
       void queryClient.invalidateQueries({ queryKey: queryKeys.cleanupStats });
       void queryClient.invalidateQueries({ queryKey: queryKeys.adminMailboxesRoot });
+    },
+  });
+
+  const deleteAllMailboxesMutation = useMutation({
+    mutationFn: deleteAllMailboxes,
+    onSuccess: (result) => {
+      clearStoredMailbox();
+      queryClient.removeQueries({ queryKey: ["mailbox"] });
+      queryClient.removeQueries({ queryKey: ["admin", "mailbox"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.cleanupStats });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.adminMailboxesRoot });
+      setSuccess(
+        `Deleted ${result.deletedMailboxes} mailboxes and ${result.deletedMessages} messages at ${formatDateTime(result.ranAt)}.`,
+      );
     },
   });
 
@@ -57,6 +80,25 @@ export function useAdminOperations() {
       await runCleanupMutation.mutateAsync();
     } catch (nextError) {
       setError(errorMessage(nextError, "Could not run cleanup"));
+    }
+  };
+
+  const handleDeleteAllMailboxes = async () => {
+    const confirmation = window.prompt(
+      `This will permanently delete every mailbox and all messages. Type "${DELETE_ALL_CONFIRMATION}" to continue.`,
+    );
+
+    if (confirmation !== DELETE_ALL_CONFIRMATION) return;
+
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await deleteAllMailboxesMutation.mutateAsync({
+        confirmation: "DELETE_ALL_MAILBOXES",
+      });
+    } catch (nextError) {
+      setError(errorMessage(nextError, "Could not delete all mailboxes"));
     }
   };
 
@@ -98,6 +140,7 @@ export function useAdminOperations() {
     isLoading: cleanupStatsQuery.isPending,
     isSettingsLoading: settingsQuery.isPending,
     isRunning: runCleanupMutation.isPending,
+    isDeletingAllMailboxes: deleteAllMailboxesMutation.isPending,
     isMaintenanceMode: Boolean(settingsQuery.data?.maintenanceMode),
     isTogglingMaintenance: updateSettingsMutation.isPending,
     maintenanceMessage: settingsQuery.data?.maintenanceMessage,
@@ -105,6 +148,7 @@ export function useAdminOperations() {
     success,
     handleRefresh,
     handleRunCleanup,
+    handleDeleteAllMailboxes,
     handleToggleMaintenance,
   };
 }

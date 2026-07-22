@@ -10,6 +10,8 @@ import type { CleanupResult, CleanupStats } from "@/types/cleanup";
 import type { Domain, DomainInput, PublicDomain } from "@/types/domain";
 import type {
   CreateMailboxInput,
+  DeleteAllMailboxesInput,
+  DeleteAllMailboxesResult,
   ListMailboxesParams,
   Mailbox,
   MailboxListResponse,
@@ -158,6 +160,13 @@ export function renewMailbox(address: string, input: RenewMailboxInput = {}) {
 export function deleteMailbox(address: string) {
   return request<null>(`/api/mailboxes/${encodedAddress(address)}`, {
     method: "DELETE",
+  });
+}
+
+export function deleteAllMailboxes(input: DeleteAllMailboxesInput) {
+  return request<DeleteAllMailboxesResult>("/api/mailboxes", {
+    method: "DELETE",
+    body: JSON.stringify(input),
   });
 }
 

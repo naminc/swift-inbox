@@ -21,6 +21,16 @@ export type RenewMailboxInput = {
   expiresInMinutes?: number;
 };
 
+export type DeleteAllMailboxesInput = {
+  confirmation: "DELETE_ALL_MAILBOXES";
+};
+
+export type DeleteAllMailboxesResult = {
+  deletedMailboxes: number;
+  deletedMessages: number;
+  ranAt: string;
+};
+
 export type MailboxListItem = Mailbox & {
   updatedAt: string;
   _count: {

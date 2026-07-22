@@ -308,6 +308,19 @@ export async function deleteMailbox(address: string) {
   });
 }
 
+export async function deleteAllMailboxes() {
+  const [totalMessages, result] = await prisma.$transaction([
+    prisma.message.count(),
+    prisma.mailbox.deleteMany()
+  ]);
+
+  return {
+    deletedMailboxes: result.count,
+    deletedMessages: totalMessages,
+    ranAt: new Date().toISOString()
+  };
+}
+
 export async function listMailboxMessages(address: string) {
   const mailbox = await getMailboxByAddress(address);
 

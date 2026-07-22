@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { STATUS_CODES } from "../constants/status-codes";
 import {
   createMailbox,
+  deleteAllMailboxes,
   deleteMailbox,
   getMailboxByAddress,
   listMailboxes,
@@ -16,6 +17,7 @@ import { getStringParam } from "../utils/params";
 import {
   addressSchema,
   createMailboxSchema,
+  deleteAllMailboxesSchema,
   renewMailboxSchema
 } from "../validators/mailbox.validators";
 
@@ -87,6 +89,25 @@ export const removeMailbox = AsyncHandler(
     await deleteMailbox(getAddressParam(req));
 
     return ApiResponse.Success(res, "Mailbox deleted", null, STATUS_CODES.OK);
+  }
+);
+
+export const removeAllMailboxes = AsyncHandler(
+  async (req: Request, res: Response) => {
+    const result = deleteAllMailboxesSchema.safeParse(req.body);
+
+    if (!result.success) {
+      throw ApiError.validation(
+        "Invalid delete all mailboxes payload",
+        result.error.flatten()
+      );
+    }
+
+    return ApiResponse.ok(
+      res,
+      "All mailboxes deleted",
+      await deleteAllMailboxes()
+    );
   }
 );
 

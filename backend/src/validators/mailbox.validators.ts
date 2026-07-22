@@ -29,6 +29,10 @@ export const renewMailboxSchema = z.object({
   expiresInMinutes: z.coerce.number().int().positive().max(43_200).optional()
 });
 
+export const deleteAllMailboxesSchema = z.object({
+  confirmation: z.literal("DELETE_ALL_MAILBOXES")
+});
+
 export const listMailboxesQuerySchema = paginationQuerySchema.extend({
   search: z.string().trim().min(1).max(254).optional(),
   domainId: z.coerce.number().int().positive().optional()

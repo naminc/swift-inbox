@@ -6,6 +6,7 @@ import {
   getMailboxes,
   patchMailboxRenew,
   postMailbox,
+  removeAllMailboxes,
   removeMailbox
 } from "../controllers/mailbox.controller";
 import { attachOptionalAdmin } from "../middlewares/attach-optional-admin";
@@ -26,6 +27,7 @@ router.get(
   getMailboxes
 );
 router.post("/", createMailboxLimiter, attachOptionalAdmin, postMailbox);
+router.delete("/", requireAdmin, mutationLimiter, removeAllMailboxes);
 router.get("/:address/admin/messages", requireAdmin, getAdminMailboxMessages);
 router.get("/:address/messages", getMailboxMessages);
 router.patch("/:address/renew", mutationLimiter, patchMailboxRenew);
