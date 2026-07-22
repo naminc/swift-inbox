@@ -1,5 +1,7 @@
 import type { PublicSettings } from "@/types/settings";
 
+export const SITE_URL = "https://swiftboxies.com/";
+
 export const SITE_DEFAULTS: Pick<
   PublicSettings,
   | "siteName"

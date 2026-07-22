@@ -3,18 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TempMail - Free Temporary Email</title>
+    <title>SwiftBoxies - Free Temporary Email</title>
     <meta
       name="description"
-      content="Create anonymous disposable email addresses instantly. No registration required."
+      content="SwiftBoxies provides fast, private temporary email addresses for signups, verification codes, and short-lived inboxes."
     />
-    <meta property="og:title" content="TempMail - Free Temporary Email" />
+    <meta
+      name="keywords"
+      content="temporary email,temp mail,disposable email,free email,privacy inbox,swift inbox"
+    />
+    <meta name="author" content="NAMINC" />
+    <link rel="canonical" href="https://swiftboxies.com/" />
+    <meta property="og:title" content="SwiftBoxies - Free Temporary Email" />
     <meta
       property="og:description"
-      content="Anonymous disposable inboxes. Instant, private, no signup."
+      content="SwiftBoxies provides fast, private temporary email addresses for signups, verification codes, and short-lived inboxes."
     />
+    <meta property="og:site_name" content="SwiftBoxies" />
+    <meta property="og:url" content="https://swiftboxies.com/" />
     <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="SwiftBoxies - Free Temporary Email" />
+    <meta
+      name="twitter:description"
+      content="SwiftBoxies provides fast, private temporary email addresses for signups, verification codes, and short-lived inboxes."
+    />
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,75 +35,7 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
     />
-    <style>
-      #initial-loader {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        display: grid;
-        place-items: center;
-        background: #ffffff;
-        color: #0f172a;
-        transition:
-          opacity 160ms ease,
-          visibility 160ms ease;
-      }
-
-      #initial-loader.initial-loader-hidden {
-        visibility: hidden;
-        opacity: 0;
-      }
-
-      .initial-loader-content {
-        display: grid;
-        justify-items: center;
-        gap: 12px;
-        font-family:
-          Inter,
-          ui-sans-serif,
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          "Segoe UI",
-          sans-serif;
-      }
-
-      .initial-loader-spinner {
-        width: 34px;
-        height: 34px;
-        border: 2px solid #dbe3ef;
-        border-top-color: #3f73d8;
-        border-radius: 9999px;
-        animation: initial-loader-spin 720ms linear infinite;
-      }
-
-      .initial-loader-text {
-        font-size: 13px;
-        color: #526075;
-      }
-
-      @media (prefers-color-scheme: dark) {
-        #initial-loader {
-          background: #0b1120;
-          color: #e5edf8;
-        }
-
-        .initial-loader-spinner {
-          border-color: #1f2a44;
-          border-top-color: #7aa2ff;
-        }
-
-        .initial-loader-text {
-          color: #aab6cb;
-        }
-      }
-
-      @keyframes initial-loader-spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="/initial-loader.css" />
   </head>
   <body>
     <div id="initial-loader" role="status" aria-live="polite" aria-label="Loading app">

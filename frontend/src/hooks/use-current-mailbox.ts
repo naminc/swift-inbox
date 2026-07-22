@@ -122,6 +122,13 @@ export function useCurrentMailbox() {
       : ("active" as const);
 
   const selectedDomain = useMemo(() => domains.find((d) => d.name === domain), [domain, domains]);
+  const requestedAddress =
+    username && selectedDomain
+      ? formatMailboxAddress(username.trim().toLowerCase(), selectedDomain.name).toLowerCase()
+      : null;
+  const isRequestingCurrentMailbox = Boolean(
+    mailbox && requestedAddress && mailbox.address.toLowerCase() === requestedAddress,
+  );
 
   const domainOptions = useMemo(
     () => domains.map((d) => ({ id: d.id, value: d.name, label: d.label })),
@@ -301,17 +308,51 @@ export function useCurrentMailbox() {
     [clearMailboxView],
   );
 
+  const renewCurrentMailbox = useCallback(
+    async (fallbackMessage: string) => {
+      if (!mailbox) return null;
+
+      try {
+        const next = await renewMailboxMutation.mutateAsync(mailbox.address);
+        activateMailbox(next);
+        void queryClient.invalidateQueries({ queryKey: queryKeys.mailbox(next.address) });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.mailboxMessages(next.address) });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.adminMailboxesRoot });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.cleanupStats });
+
+        return next;
+      } catch (err) {
+        if (err instanceof ApiRequestError && err.statusCode === 404) {
+          clearStoredMailbox();
+          clearMailboxView();
+        }
+
+        setError(errorMessage(err, fallbackMessage));
+        return null;
+      }
+    },
+    [activateMailbox, clearMailboxView, mailbox, queryClient, renewMailboxMutation],
+  );
+
   const handleCreate = useCallback(() => {
     if (isCreatePending || isMaintenanceMode) return;
     setIsCreatePending(true);
-    void createOrLoadMailbox(username || createRandomLocalPart(), selectedDomain).finally(() =>
-      setIsCreatePending(false),
-    );
+
+    const shouldRenewCurrentMailbox = mailbox && isRequestingCurrentMailbox && isMailboxExpired;
+    const action = shouldRenewCurrentMailbox
+      ? renewCurrentMailbox("Could not renew this email address")
+      : createOrLoadMailbox(username || createRandomLocalPart(), selectedDomain);
+
+    void Promise.resolve(action).finally(() => setIsCreatePending(false));
   }, [
     createOrLoadMailbox,
     createRandomLocalPart,
+    isMailboxExpired,
     isCreatePending,
     isMaintenanceMode,
+    isRequestingCurrentMailbox,
+    mailbox,
+    renewCurrentMailbox,
     selectedDomain,
     username,
   ]);
@@ -368,26 +409,8 @@ export function useCurrentMailbox() {
   const handleRenew = useCallback(async () => {
     if (!mailbox || renewMailboxMutation.isPending || isMaintenanceMode) return;
     setError(null);
-    try {
-      const next = await renewMailboxMutation.mutateAsync(mailbox.address);
-      activateMailbox(next);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.adminMailboxesRoot });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.cleanupStats });
-    } catch (err) {
-      if (err instanceof ApiRequestError && err.statusCode === 404) {
-        clearStoredMailbox();
-        clearMailboxView();
-      }
-      setError(errorMessage(err, "Could not renew mailbox"));
-    }
-  }, [
-    activateMailbox,
-    clearMailboxView,
-    isMaintenanceMode,
-    mailbox,
-    queryClient,
-    renewMailboxMutation,
-  ]);
+    await renewCurrentMailbox("Could not renew mailbox");
+  }, [isMaintenanceMode, mailbox, renewCurrentMailbox, renewMailboxMutation.isPending]);
 
   return {
     mailbox,
@@ -406,6 +429,7 @@ export function useCurrentMailbox() {
     expiryTone,
     isBusy,
     isCreatePending,
+    isGetEmailPending: isCreatePending || renewMailboxMutation.isPending,
     isRenewing: renewMailboxMutation.isPending,
     createRandomMailbox,
     handleUsernameChange,

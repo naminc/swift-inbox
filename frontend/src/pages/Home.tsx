@@ -61,8 +61,8 @@ export function Home() {
         title={heroHeading}
         subtitle={heroSubheading}
         isLoading={mb.isDomainsLoading}
-        isGenerating={mb.isCreatePending}
-        disabled={mb.isCreatePending || mb.isMaintenanceMode}
+        isGenerating={mb.isGetEmailPending}
+        disabled={mb.isGetEmailPending || mb.isMaintenanceMode}
         onUsernameChange={mb.handleUsernameChange}
         onDomainChange={mb.handleDomainChange}
         onGenerate={mb.handleCreate}

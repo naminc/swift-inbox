@@ -44,16 +44,18 @@ export class ApiRequestError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  const headers = new Headers(init?.headers);
+
+  if (init?.body && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
 
   try {
     const response = await fetch(`${API_URL}${path}`, {
       ...init,
       credentials: "include",
       signal: init?.signal ?? controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...init?.headers,
-      },
+      headers,
     });
 
     const payload = (await response.json().catch(() => null)) as ApiResponse<T> | null;

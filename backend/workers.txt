@@ -1,0 +1,79 @@
+const MAX_EMAIL_BYTES = 5 * 1024 * 1024;
+const BACKEND_TIMEOUT_MS = 15000;
+
+async function streamToText(stream) {
+  return await new Response(stream).text();
+}
+
+function getHeader(headers, name) {
+  return headers.get(name) || headers.get(name.toLowerCase()) || null;
+}
+
+async function fetchWithTimeout(url, init, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export default {
+  async fetch() {
+    return new Response("Swift Inbox inbound worker is running", {
+      status: 200,
+    });
+  },
+
+  async email(message, env) {
+    if (!env.BACKEND_INBOUND_URL || !env.INBOUND_WEBHOOK_SECRET) {
+      message.setReject("Inbound worker is not configured");
+      return;
+    }
+
+    if (message.rawSize > MAX_EMAIL_BYTES) {
+      message.setReject("Message too large");
+      return;
+    }
+
+    const raw = await streamToText(message.raw);
+    const subject = getHeader(message.headers, "subject");
+
+    const payload = {
+      to: message.to,
+      from: message.from,
+      subject,
+      textBody: raw,
+      htmlBody: null,
+      rawPayload: {
+        headers: Object.fromEntries(message.headers),
+        rawSize: message.rawSize,
+        messageId: getHeader(message.headers, "message-id"),
+        date: getHeader(message.headers, "date"),
+        receivedAt: new Date().toISOString(),
+      },
+    };
+
+    const response = await fetchWithTimeout(
+      env.BACKEND_INBOUND_URL,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-inbound-secret": env.INBOUND_WEBHOOK_SECRET,
+        },
+        body: JSON.stringify(payload),
+      },
+      BACKEND_TIMEOUT_MS,
+    );
+
+    if (!response.ok) {
+      message.setReject("Backend rejected inbound email");
+    }
+  },
+};
